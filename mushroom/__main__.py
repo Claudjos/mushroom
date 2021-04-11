@@ -25,9 +25,11 @@ if __name__ == "__main__":
 
 	# Raw socket to sniff traffic
 	rawsocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+	rawsocket.setblocking(0)
 
 	# UDP UNIX socket to retrieve data
 	server = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+	server.setblocking(0)
 	server.bind(SOCKET_PATH)
 
 	try:
