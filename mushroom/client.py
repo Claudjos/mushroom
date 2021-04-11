@@ -2,6 +2,7 @@ from . import SOCKET_PATH, COLLECTION_TCP_SYN
 from json import loads
 from uuid import uuid4
 from os import unlink
+from select import select
 import socket
 
 
@@ -10,12 +11,13 @@ class Client:
 	def __init__(self):
 		self.sock_name = "/tmp/{}.sock".format(uuid4())
 		self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+		self.sock.setblocking(0)
 		self.sock.bind(self.sock_name)
 
 	def get_syn_data(self, ip: str, port: int) -> dict:
 		"""
-		TODO
-			- set timeout
+		RAISES
+			FileNotFoundError: if server UNIX socket does not exists.
 		"""
 		self.sock.sendto(
 			"{};{}:{}".format(
@@ -25,7 +27,12 @@ class Client:
 			).encode(),
 			SOCKET_PATH
 		)
-		return loads(self.sock.recv(1024).decode())
+		# Wait one second for the response
+		rl, wl, xl = select([self.sock],[],[], 1)
+		if rl == []:
+			return None
+		else:
+			return loads(self.sock.recv(1024).decode())
 
 	def __del__(self):
 		unlink(self.sock_name)
